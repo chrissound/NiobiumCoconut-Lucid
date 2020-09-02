@@ -12,9 +12,15 @@ let
   myHaskellPackages = pkgs.haskell.packages.${compiler}.override {
     overrides = self: super: rec {
       niobiumcoconut  = self.callCabal2nix "niobiumcoconut"
-        (/home/chris/fromLaptopt/usbflash/Haskell/NiobiumCoconut/.) {};
+        (builtins.fetchGit {
+          url = "https://github.com/chrissound/NiobiumCoconut.git";
+          rev = "18886b6276e61d62b9bfb5cfb71b8892c9fd2d30";
+        }) {};
       actiniumbravohoneydew  = self.callCabal2nix "actiniumbravohoneydew"
-        (/home/chris/NewProjects/ActiniumBravoHoneydew/.) {};
+        (builtins.fetchGit {
+          url = "https://github.com/chrissound/ActiniumBravoHoneydew.git";
+          rev = "da77b13b9a9b9b5ba1c34a3813e252d72535bb54";
+        }) {};
     };
   };
 in
