@@ -1,8 +1,4 @@
-{-# OPTIONS -Wno-unused-matches #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
 module NioFormHtml where
 
 import Lucid
@@ -61,7 +57,7 @@ basicNioformHtml (NioForm nf) s = do
 
 
 nioformHtmlField :: NioFieldView -> Html ()
-nioformHtmlField nfv@(NioFieldView a b ers nfi _) = do
+nioformHtmlField nfv@(NioFieldView _ _ ers nfi _) = do
         when (length ers > 0)
           (alertBox (BootAlertWarn)
             $ (p_ $ fromString ("Errors for " ++ (cs $ fvLabel nfv)))
@@ -69,6 +65,13 @@ nioformHtmlField nfv@(NioFieldView a b ers nfi _) = do
           )
         <>
         case nfi of
+          NioFieldInputSubmit v v' -> do
+            input_ [
+                type_ "submit"
+              , name_ $ fromString $ cs v
+              , id_ (fscs $ fvId nfv)
+              , value_ $ fromString $ cs v'
+              ]
           NioFieldInputFile -> do
             input_ [
                 type_ "file"
@@ -93,7 +96,17 @@ nioformHtmlField nfv@(NioFieldView a b ers nfi _) = do
               , name_ (fscs $ fvId nfv)
               , id_ (fscs $ fvId nfv)
               ] $ fscs $ (case fvValue nfv of; NioFieldValS s -> s; NioFieldValM s -> unlines s)
-            br_ []
+          NioFieldInputDigit -> do
+            with label_ 
+              [for_ (fscs $ fvId nfv)]
+              $ fscs $ fvLabel nfv
+            span_ " "
+            input_ [
+                type_ "text"
+              , name_ (fscs $ fvId nfv)
+              , id_ (fscs $ fvId nfv)
+              , value_ (fscs $ (case fvValue nfv of; NioFieldValS s -> s; NioFieldValM s -> unlines s))
+              ]
           NioFieldInputTextShort -> do
             with label_ 
               [for_ (fscs $ fvId nfv)]
@@ -105,19 +118,17 @@ nioformHtmlField nfv@(NioFieldView a b ers nfi _) = do
               , id_ (fscs $ fvId nfv)
               , value_ (fscs $ (case fvValue nfv of; NioFieldValS s -> s; NioFieldValM s -> unlines s))
               ]
-            br_ []
           NioFieldInputBool c -> do
             with label_ 
-              [for_ ((fscs $ case fvValue nfv of; NioFieldValS s -> s; NioFieldValM s -> unlines s))]
+              [for_ $ fromString $ c ++ (fscs $ fvId nfv)]
               $ fscs $ fvLabel nfv
             span_ " "
-            input_ $ (if c then (checked_ :) else id) [
+            input_ $ (if (case fvValue nfv of; NioFieldValS s -> c == s; NioFieldValM m -> elem c m) then (checked_ :) else id) [
                 type_ "checkbox"
               , name_ (fscs $ fvId nfv)
-              , id_ (fscs $ case fvValue nfv of; NioFieldValS s -> s; NioFieldValM s -> unlines s)
-              , value_ (fscs $ case fvValue nfv of; NioFieldValS s -> s; NioFieldValM s -> unlines s)
+              , id_ $ fromString $ c ++ (fscs $ fvId nfv)
+              , value_ $ fscs c
               ]
-            br_ []
           NioFieldInputLabled multi kv -> do
             with label_ 
               [for_ (fscs $ fvId nfv)]
@@ -127,12 +138,10 @@ nioformHtmlField nfv@(NioFieldView a b ers nfi _) = do
                 name_ (fscs $ fvId nfv)
               , id_ (fscs $ fvId nfv)
               ] ++ [multiple_ "multiple" | multi])
-              $ sequence $ fmap
+              $ sequence_ $ fmap
                 (\(x',y') -> do
                   let y'' = ((case fvValue nfv of; NioFieldValS s -> pure s; NioFieldValM s -> s)) :: [String]
                   (with option_ $ [value_ y'] ++ [ selected_ "" | elem (cs y') y''])
                     $ fscs x'
                 )
                 kv
-            br_ []
-          _ -> error "Invalid input field..."
