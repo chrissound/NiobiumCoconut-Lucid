@@ -1,5 +1,14 @@
 { sources ? import ./nix/sources.nix
 , compiler ? "ghc865"
+, niobiumcoconut' ? (import (builtins.fetchGit {
+          url = "https://github.com/chrissound/NiobiumCoconut.git";
+          rev = "95933330dffd8e80dba796ae6eebbd0e93b29e63";
+        }) )
+, actiniumbravohoneydew' ? (import
+        (builtins.fetchGit {
+          url = "https://github.com/chrissound/ActiniumBravoHoneydew.git";
+          rev = "46913901896f7488553f0560c22b20f7631d3118";
+        }))
 } :
 let
   niv = import sources.nixpkgs {
@@ -11,16 +20,8 @@ let
   pkgs = niv.pkgs;
   myHaskellPackages = pkgs.haskell.packages.${compiler}.override {
     overrides = self: super: rec {
-      niobiumcoconut  = import (/home/chris/fromLaptopt/usbflash/Haskell/NiobiumCoconut/.) { sources = sources; compiler = compiler; };
-      #niobiumcoconut  = import (builtins.fetchGit {
-          #url = "https://github.com/chrissound/NiobiumCoconut.git";
-          #rev = "18886b6276e61d62b9bfb5cfb71b8892c9fd2d30";
-        #}) {};
-      actiniumbravohoneydew  = import
-        (builtins.fetchGit {
-          url = "https://github.com/chrissound/ActiniumBravoHoneydew.git";
-          rev = "da77b13b9a9b9b5ba1c34a3813e252d72535bb54";
-        }) {};
+      niobiumcoconut  = niobiumcoconut' { sources = sources; compiler = compiler; };
+      actiniumbravohoneydew  = actiniumbravohoneydew' { sources = sources; compiler = compiler; };
     };
   };
 in
