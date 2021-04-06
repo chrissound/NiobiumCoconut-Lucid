@@ -8,6 +8,7 @@ import Data.String
 
 import NioFormTypes
 import ABH.Strings
+import Data.List
 
 data BootAlertType
    = BootAlertDanger
@@ -52,7 +53,8 @@ basicNioformHtml (NioForm nf) s = do
     , class_ "blockInputs"
     , enctype_ "multipart/form-data"
     ] $ do
-      forM_ nf nioformHtmlField
+      mconcat $ intersperse (br_ []) $ nioformHtmlField <$> nf
+      br_ []
       input_ [type_ "submit"]
 
 
@@ -87,9 +89,12 @@ nioformHtmlField nfv@(NioFieldView _ _ ers nfi _) = do
               , value_ $ fscs (case fvValue nfv of; NioFieldValS s -> s; NioFieldValM s -> unlines s)
               ]
           NioFieldInputText -> do
-            with label_ 
-              [for_ (fscs $ fvId nfv)]
-              $ fscs $ fvLabel nfv
+            case fvLabel nfv of
+              "" -> pure ()
+              x -> do
+                with label_ 
+                  [for_ (fscs $ fvId nfv)]
+                  $ fscs $ x
             span_ " "
             textarea_
               [ type_ "text"
